@@ -13,11 +13,13 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -31,6 +33,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -40,6 +43,8 @@ import frc.robot.Constants.Mode;
 import frc.robot.subsystems.drive.requests.SysIdSwerveTranslation_Torque;
 import frc.robot.subsystems.vision.VisionUtil.VisionMeasurement;
 import frc.robot.utils.ArrayBuilder;
+import frc.robot.utils.SidePoseMatcher;
+import java.io.IOException;
 import java.util.List;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -197,17 +202,89 @@ public class Drive extends SubsystemBase {
         );
   }
 
-  public Command driveToPose(Pose2d pose) {
-    // Create the constraints to use while pathfinding
-    PathConstraints constraints = new PathConstraints(10, 4.0, 5, Units.degreesToRadians(720));
+  // public Command driveToPose(Pose2d pose) {
+  //   // Create the constraints to use while pathfinding
+  //   PathConstraints constraints = new PathConstraints(10, 4.0, 5, Units.degreesToRadians(720));
 
-    // Since AutoBuilder is configured, we can use it to build pathfinding commands
-    return AutoBuilder.pathfindToPose(
-        pose,
-        constraints,
-        0.0 // Goal end velocity in meters/se // Rotation delay distance in meters. This is how far
-        // the robot should travel before attempting to rotate.
-        );
+  //   // Since AutoBuilder is configured, we can use it to build pathfinding commands
+  //   return AutoBuilder.pathfindToPose(
+  //       pose,
+  //       constraints,
+  //       0.0 // Goal end velocity in meters/se // Rotation delay distance in meters. This is how
+  // far
+  //       // the robot should travel before attempting to rotate.
+  //       );
+  // }
+  PathPlannerPath path = null;
+
+  public Command driveToPosePathfind(String pathName) {
+
+    // if (SidePoseMatcher.getClosestPose1(getPose()).getX() == 5.244) {
+    //   pathName = "Side1R";
+
+    // } else if (SidePoseMatcher.getClosestPose1(getPose()).getX() == 3.704) {
+    //   pathName = "Side2R";
+    // } else if (SidePoseMatcher.getClosestPose1(getPose()).getX() == 3.300) {
+    //   pathName = "Side3R";
+    // } else if (SidePoseMatcher.getClosestPose1(getPose()).getX() == 4.022) {
+    //   pathName = "Side4R";
+    // } else if (SidePoseMatcher.getClosestPose1(getPose()).getX() == 4.936) {
+    //   pathName = "Side5R";
+    // } else if (SidePoseMatcher.getClosestPose1(getPose()).getX() == 5.619) {
+    //   pathName = "Side6R";
+    // }
+
+    SmartDashboard.putString("weeeee3", pathName);
+
+    try {
+
+      // Attempt to load the path
+      path = PathPlannerPath.fromPathFile(pathName);
+    } catch (IOException | org.json.simple.parser.ParseException e) {
+      // If there's a file or parsing error, handle it here
+      e.printStackTrace();
+      // Possibly return an empty command, a default path, etc.
+      return null; // or return Commands.none();
+    }
+
+    // Create constraints for your path
+    PathConstraints constraints =
+        new PathConstraints(
+            4, // Max velocity (m/s)
+            2, // Max acceleration (m/s^2)
+            Units.degreesToRadians(720), // Max rotational velocity
+            Units.degreesToRadians(720) // Max rotational acceleration
+            );
+
+    SmartDashboard.putNumber("weeeee311", SidePoseMatcher.getClosestPose1(getPose()).getX());
+
+    // Now that we have the path, pass it into your pathfinding command
+    return AutoBuilder.pathfindThenFollowPath(path, constraints);
+  }
+
+  public Command drivetopose(Pose2d pose) {
+    // PathPlannerPath path = null;
+    // try {
+    //   // Attempt to load the path
+    //   path = PathPlannerPath.fromPathFile(pathName);
+    // } catch (IOException | org.json.simple.parser.ParseException e) {
+    //   // If there's a file or parsing error, handle it here
+    //   e.printStackTrace();
+    //   // Possibly return an empty command, a default path, etc.
+    //   return null; // or return Commands.none();
+    // }
+
+    // Create constraints for your path
+    PathConstraints constraints =
+        new PathConstraints(
+            4, // Max velocity (m/s)
+            5, // Max acceleration (m/s^2)
+            Units.degreesToRadians(540), // Max rotational velocity
+            Units.degreesToRadians(720) // Max rotational acceleration
+            );
+
+    // Now that we have the path, pass it into your pathfinding command
+    return AutoBuilder.pathfindToPose(pose, constraints);
   }
 
   /**
@@ -226,6 +303,18 @@ public class Drive extends SubsystemBase {
 
   public Command brake() {
     return applyRequest(() -> brakeRequest);
+  }
+
+  public void chassisspeed(ChassisSpeeds request) {
+    io.setControl(m_pathApplyRobotSpeeds.withSpeeds(request));
+  }
+
+  public void drive3(Translation2d translation, double rotation, boolean isOpenLoop) {
+    ChassisSpeeds desiredChassisSpeeds =
+        ChassisSpeeds.fromFieldRelativeSpeeds(
+            translation.getX(), translation.getY(), rotation, getPose().getRotation());
+
+    chassisspeed(desiredChassisSpeeds);
   }
 
   /**
@@ -252,6 +341,12 @@ public class Drive extends SubsystemBase {
 
   @Override
   public void periodic() {
+
+    // SmartDashboard.putNumber(
+    //     "distance",
+    //     SidePoseMatcher.getDistanceToTarget(
+    //         getPose(), SidePoseMatcher.getClosestRightPose(getPose())));
+
     /*
      * Periodically try to apply the operator perspective.
      * If we haven't applied the operator perspective before, then we should apply it regardless of DS state.
@@ -261,6 +356,7 @@ public class Drive extends SubsystemBase {
      */
 
     io.updateInputs(inputs);
+
     gyroDisconnectedAlert.set(!inputs.gyroConnected);
 
     io.updateModules(modules);
@@ -297,6 +393,11 @@ public class Drive extends SubsystemBase {
   // }
 
   public ChassisSpeeds getAlignmentSpeeds(Pose2d desiredPose) {
+
+    SmartDashboard.putNumber("X pose", desiredPose.getX());
+    SmartDashboard.putNumber("Y Pose", desiredPose.getY());
+    SmartDashboard.putNumber("Rotation", desiredPose.getRotation().getDegrees());
+
     // Use the teleop auto align controller from your constants
     // Note: The third parameter here is the desired linear speed (set to 0 if you only want to
     // rotate)
@@ -332,8 +433,12 @@ public class Drive extends SubsystemBase {
   //     io.setControl(m_pathApplyRobotSpeeds.withSpeeds(speeds));
   //   })};
 
+  public void stop() {
+    io.setControl(brakeRequest);
+  }
+
   public boolean isAtTarget(Pose2d target, Pose2d currentPose) {
-    double toleranceMeters = 0.1; // 10 cm tolerance
+    double toleranceMeters = 0.08; // 10 cm tolerance
     return currentPose.getTranslation().getDistance(target.getTranslation()) < toleranceMeters;
   }
 

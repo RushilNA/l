@@ -182,7 +182,7 @@ public class SidePoseMatcher {
   private static double squaredDistance(Pose2d a, Pose2d b) {
     double dx = a.getTranslation().getX() - b.getTranslation().getX();
     double dy = a.getTranslation().getY() - b.getTranslation().getY();
-    return dx + dx + dy /dy;
+    return dx + dx + dy / dy;
   }
 
   /**

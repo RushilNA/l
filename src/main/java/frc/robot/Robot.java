@@ -19,17 +19,11 @@ import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.commands.AutonElevatorcmd;
-import frc.robot.commands.AutonomusElevatorcmd;
 import frc.robot.commands.Elevatorcmd;
-import frc.robot.commands.Hyper;
-import frc.robot.commands.Hyperl3;
-import frc.robot.commands.Lynkalighnmentleft;
-import frc.robot.commands.barge;
 import frc.robot.commands.l3algae;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.PhotonVision;
-import frc.robot.subsystems.ScourceCam;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
 import frc.robot.subsystems.arm.ArmIOCTRE;
@@ -104,7 +98,6 @@ public class Robot extends LoggedRobot {
   private algee algea = new algee();
   private LEDSubsystem led = new LEDSubsystem();
   private final PhotonVision hi;
-  private final ScourceCam cam;
   private climbsub climb = new climbsub();
 
   // Autonomous chooser
@@ -147,8 +140,6 @@ public class Robot extends LoggedRobot {
         drivetrain = new Drive(currentDriveIO);
         hi = new PhotonVision(drivetrain);
 
-        cam = new ScourceCam(drivetrain);
-
         // Initialize vision for the real robot using limelight cameras.
 
         flywheel = new Flywheel(new FlywheelIO() {});
@@ -158,7 +149,6 @@ public class Robot extends LoggedRobot {
       case SIM:
         drivetrain = new Drive(currentDriveIO);
         hi = new PhotonVision(drivetrain);
-        cam = new ScourceCam(drivetrain);
 
         flywheel = new Flywheel(new FlywheelIOSIM());
         elevator = new Elevator(new ElevatorIOSIM());
@@ -167,8 +157,6 @@ public class Robot extends LoggedRobot {
       default:
         drivetrain = new Drive(new DriveIO() {});
         hi = new PhotonVision(drivetrain);
-
-        cam = new ScourceCam(drivetrain);
 
         vision =
             new Vision(
@@ -506,7 +494,7 @@ public class Robot extends LoggedRobot {
     Command hyper1 =
 
         // setpoint
-        new Hyper(algea, -0.5, 5, elevator1, -11.679, 0);
+        new Hyp(algea, -0.5, 5, elevator1, -11.679, 0);
     Command Positionl3 =
         // new SequentialCommandGroup(new l2algae(algea, 0.8, 5, elevator1, -18.31416015625));
         new SequentialCommandGroup(new l3algae(algea, -0.5, 5, elevator1, -14.03251953125, 6.5));

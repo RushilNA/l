@@ -6,13 +6,15 @@ import frc.robot.subsystems.elevator.elevatorsub;
 
 public class Elevatorcmd extends Command {
   private final elevatorsub elevator;
-  private final int targetPosition;
+
+  private int targetposition;
   private final double tolerance = 0.25; // Tolerance to switch from Motion Magic to PID
   private double l0 = 0;
+
   private double l1 = -7.13134765625;
-  private double l2 = -26.000390625;
-  private double l3 = -26.0193359375;
-  private double l4 = -24.15123046875;
+  private double l2 = -26.8;
+  private double l3 = -26.4;
+  private double l4 = -23.58310546875;
 
   private boolean first;
   private boolean up;
@@ -32,17 +34,16 @@ public class Elevatorcmd extends Command {
    * @param elevator The elevator subsystem.
    * @param targetPosition The target position (in sensor units) to move to.
    */
-  public Elevatorcmd(elevatorsub elevator, int targetPosition, boolean hi) {
+  public Elevatorcmd(elevatorsub elevator, boolean hi) {
     this.up = hi;
     this.elevator = elevator;
-    this.targetPosition = targetPosition;
     addRequirements(elevator);
   }
 
   @Override
   public void initialize() {
 
-    elevator.initializePid(targetPosition);
+    targetposition = elevator.elevatorpos();
 
     if (elevator.whichlist() == 1) {
 
@@ -51,13 +52,13 @@ public class Elevatorcmd extends Command {
       Constants.setRobotState(Constants.RobotState.ALGEA);
     }
 
-    if (targetPosition == 1) {
+    if (elevator.elevatorpos() == 1) {
       Constants.setElevatorState(Constants.Elevatorposition.L1);
-    } else if (targetPosition == 2) {
+    } else if (elevator.elevatorpos() == 2) {
       Constants.setElevatorState(Constants.Elevatorposition.L2);
-    } else if (targetPosition == 3) {
+    } else if (elevator.elevatorpos() == 3) {
       Constants.setElevatorState(Constants.Elevatorposition.L3);
-    } else if (targetPosition == 4) {
+    } else if (elevator.elevatorpos() == 4) {
       Constants.setElevatorState(Constants.Elevatorposition.L4);
 
       // Normal
@@ -78,14 +79,14 @@ public class Elevatorcmd extends Command {
 
     if (up) {
       // Set flipsetpoint based on the desired elevator state.
-      if (Constants.getElevatorState() == Constants.Elevatorposition.L1) {
+      if (elevator.elevatorpos() == 1) {
         flipsetpoint = l1;
 
-      } else if (Constants.getElevatorState() == Constants.Elevatorposition.L2) {
+      } else if (elevator.elevatorpos() == 2) {
         flipsetpoint = l2;
-      } else if (Constants.getElevatorState() == Constants.Elevatorposition.L3) {
+      } else if (elevator.elevatorpos() == 3) {
         flipsetpoint = l3;
-      } else if (Constants.getElevatorState() == Constants.Elevatorposition.L4) {
+      } else if (elevator.elevatorpos() == 4) {
         flipsetpoint = l4;
 
         // BargeShoot
@@ -94,7 +95,7 @@ public class Elevatorcmd extends Command {
 
       // Check if the flip motor has reached its setpoint.
       // Note: Use flipsetpoint (not targetPosition) for the check.
-      if (!elevator.flipcheck(-13)) {
+      if (!elevator.flipcheck(flipsetpoint)) {
 
         // Command the flip motor until it is at its setpoint.
         elevator.setMotionMagicflip(flipsetpoint);
@@ -104,7 +105,7 @@ public class Elevatorcmd extends Command {
 
       // Once the flip motor is holding its setpoint, command the elevator.
 
-      elevator.setMotionMagic1(targetPosition);
+      elevator.setMotionMagic1(elevator.elevatorpos());
       elevator.setMotionMagicflip(flipsetpoint);
       // When close enough to the target, switch to PID holding mode.
       // if (Math.abs(currentPos - targetPosition) < tolerance) {

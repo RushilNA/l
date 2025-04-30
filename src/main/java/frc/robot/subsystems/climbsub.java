@@ -13,26 +13,20 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
 
 public class climbsub extends SubsystemBase {
 
-    final MotionMagicVoltage m_request = new MotionMagicVoltage(0);
+  final MotionMagicVoltage m_request = new MotionMagicVoltage(0);
 
   private TalonFX climbm = new TalonFX(16);
-    TalonFXConfiguration cfg = new TalonFXConfiguration();
-    
-      private Slot0Configs slot0 = cfg.Slot0;
+  TalonFXConfiguration cfg = new TalonFXConfiguration();
 
-      MotionMagicConfigs motionMagicConfigs = cfg.MotionMagic;
-    private CANcoder climbe = new CANcoder(30);
+  private Slot0Configs slot0 = cfg.Slot0;
 
-    
+  MotionMagicConfigs motionMagicConfigs = cfg.MotionMagic;
+  private CANcoder climbe = new CANcoder(30);
 
-
-
-
-  //idk rn #dont use this id for this motor 
+  // idk rn #dont use this id for this motor
 
   private int distance;
   private Timer time3 = new Timer();
@@ -40,7 +34,6 @@ public class climbsub extends SubsystemBase {
   public climbsub() {
     cfg.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
     cfg.Feedback.FeedbackRemoteSensorID = climbe.getDeviceID();
-    
 
     slot0.kG = 0.2; // A gear ratio of 4:1 results in 0.25 output
     slot0.kS = 0.25;
@@ -49,16 +42,13 @@ public class climbsub extends SubsystemBase {
     slot0.kP = 7; // A position error of 2.5 rotations results in 12 V output
     slot0.kI = 0.1; // no output for integrated error
     slot0.kD = 0; // A velocity error of 1 rps results in 0.1 V output
-    
+
     motionMagicConfigs.MotionMagicCruiseVelocity = 100; // Target cruise velocity of 80 rps
     motionMagicConfigs.MotionMagicAcceleration =
         300; // Target acceleration of 160 rps/s (0.5 seconds)
     motionMagicConfigs.MotionMagicJerk = 900; // Target jerk of 1600 rps/s/s (0.1 seconds)\
 
-
     climbm.getConfigurator().apply(cfg);
-
-    
 
     climbm.setNeutralMode(NeutralModeValue.Brake);
   }
@@ -66,8 +56,6 @@ public class climbsub extends SubsystemBase {
   @Override
   public void periodic() {
     SmartDashboard.putNumber("clibm", climbm.getPosition().getValueAsDouble());
-
-
   }
 
   public boolean check() {
@@ -86,8 +74,6 @@ public class climbsub extends SubsystemBase {
     return climbm.getVelocity().getValueAsDouble();
   }
 
-  
-
   public Command cmd(double position) {
     return new Command() {
       @Override
@@ -96,7 +82,6 @@ public class climbsub extends SubsystemBase {
       @Override
       public void execute() {
         climbm.setControl(m_request.withPosition(position).withEnableFOC(true));
-       
       }
 
       @Override
@@ -108,8 +93,6 @@ public class climbsub extends SubsystemBase {
       }
     };
   }
-
- 
 
   public boolean hasVelocity(double inputVelo) {
 
