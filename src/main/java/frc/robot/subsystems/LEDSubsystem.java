@@ -1,9 +1,3 @@
-// Copyright (c) 2025 FRC 5712
-//
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file at
-// the root directory of this project.
-
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.led.Animation;
@@ -16,6 +10,8 @@ import com.ctre.phoenix.led.RgbFadeAnimation;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.RobotState;
@@ -38,9 +34,9 @@ public class LEDSubsystem extends SubsystemBase {
   // - Disabled uses an RGBFade animation.
   // - IDLE uses a Rainbow animation.
   // - ALGEA uses a Fire animation.
-  private final Animation rgbFadeAnimation = new RgbFadeAnimation(0.5, 0.5, 360);
-  private final Animation rainbowAnimation = new RainbowAnimation(1.5, 1, 360, false, 8);
-  private final Animation fireAnimation = new FireAnimation(1.5, 1.5, 360, 0.8, 0.2, false, 8);
+  private final Animation rgbFadeAnimation = new RgbFadeAnimation(1.5, 0.5, 850);
+  private final Animation rainbowAnimation = new RainbowAnimation(1.5, 1, 850, false, 8);
+  private final Animation fireAnimation = new FireAnimation(1.5, 4, 850, 0.8, 0.2, false, 8);
 
   // A simple Color class for setting a solid color during flash mode.
   public static class Color {
@@ -69,7 +65,6 @@ public class LEDSubsystem extends SubsystemBase {
   }
 
   public LEDSubsystem() {
-
     // Use device 0 for LEFT and device 1 for RIGHT.
     applyConfigs();
     blinkTimer.start();
@@ -80,11 +75,11 @@ public class LEDSubsystem extends SubsystemBase {
       animate(fireAnimation);
     } else {
       if (initialState == RobotState.ALGEA) {
-        animate(fireAnimation);
+        animate(rgbFadeAnimation);
       } else if (initialState == RobotState.IDLE) {
-        animate(rainbowAnimation);
+        animate(fireAnimation);
       } else {
-        animate(rainbowAnimation);
+        animate(fireAnimation);
       }
     }
   }
@@ -106,7 +101,7 @@ public class LEDSubsystem extends SubsystemBase {
     candle.clearAnimation(0);
   }
 
-  // Sets the LED to a specific solid color (used during flash mode).
+  // Sets the LED to a specific solid color (used during flash mode or by commands).
   public void setColor(Color color) {
     candle.setLEDs(color.R, color.G, color.B);
   }
@@ -122,43 +117,29 @@ public class LEDSubsystem extends SubsystemBase {
     } else {
       RobotState currentState = Constants.getRobotState();
 
-      // If transitioning between ALGEA and IDLE, trigger flash mode.
-      if ((currentState == RobotState.ALGEA || currentState == RobotState.IDLE)
-          && (currentState != lastRobotState)) {
-        flashMode = true;
-        flashTimer.reset();
-        flashTimer.start();
+      if (currentState == Constants.RobotState.ALGEA) {
+        animate(rainbowAnimation);
       }
+      if (currentState == Constants.RobotState.IDLE) {
+        animate(fireAnimation);
+      }
+    }
+  }
 
-      if (flashMode && flashTimer.get() < flashDuration) {
-        // During flash mode, alternate quickly between off and a solid flash color.
-        if (blinkTimer.hasElapsed(blinkInterval)) {
-          blinkOff = !blinkOff;
-          if (blinkOff) {
-            setColor(Colors.off);
-          } else {
-            // Choose flash color based on the target state.
-            if (Constants.getRobotState() == RobotState.ALGEA) {
-              setColor(Colors.rainbowFlash);
-            } else if (Constants.getRobotState() == RobotState.IDLE) {
-              setColor(Colors.fireFlash);
-            }
-          }
-          blinkTimer.restart();
-        }
-      } else {
-        // End flash mode and select the normal animation.
-        flashMode = false;
-        if (currentState == RobotState.IDLE) {
-          animate(fireAnimation);
-        } else if (currentState == RobotState.ALGEA) {
-          animate(rainbowAnimation);
-        } else {
-          // Default fallback.
-          animate(fireAnimation);
-        }
-      }
-      lastRobotState = currentState;
+  /**
+   * Returns a command that sets the LED color to yellow.
+   *
+   * <p>When this command is scheduled, the LEDs will immediately change to yellow (RGB: 255, 255,
+   * 0).
+   */
+  public Command getSetYellowCommand() {
+    return new InstantCommand(() -> setColor(new Color(255, 255, 0)));
+  }
+
+  // Alternatively, you can define a nested command class if you prefer:
+  public class SetYellowCommand extends InstantCommand {
+    public SetYellowCommand() {
+      super(() -> setColor(new Color(255, 255, 0)), LEDSubsystem.this);
     }
   }
 }
