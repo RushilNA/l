@@ -20,15 +20,18 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.commands.AutonElevatorcmd;
 import frc.robot.commands.Elevatorcmd;
+import frc.robot.commands.Hyper;
+import frc.robot.commands.Hyperl3;
+import frc.robot.commands.barge;
 import frc.robot.commands.l3algae;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.LEDSubsystem;
-import frc.robot.subsystems.PhotonVision;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
 import frc.robot.subsystems.arm.ArmIOCTRE;
 import frc.robot.subsystems.arm.ArmIOSIM;
 import frc.robot.subsystems.arm.algee;
+import frc.robot.subsystems.LEDSubsystem;
+import frc.robot.subsystems.PhotonVision;
 import frc.robot.subsystems.climbsub;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveIO;
@@ -140,6 +143,7 @@ public class Robot extends LoggedRobot {
         drivetrain = new Drive(currentDriveIO);
         hi = new PhotonVision(drivetrain);
 
+
         // Initialize vision for the real robot using limelight cameras.
 
         flywheel = new Flywheel(new FlywheelIO() {});
@@ -157,6 +161,7 @@ public class Robot extends LoggedRobot {
       default:
         drivetrain = new Drive(new DriveIO() {});
         hi = new PhotonVision(drivetrain);
+
 
         vision =
             new Vision(
@@ -417,11 +422,7 @@ public class Robot extends LoggedRobot {
 
     NamedCommands.registerCommand("reset", elevator1.runOnce(() -> elevator1.resetenc()));
 
-    NamedCommands.registerCommand(
-        "elevatord",
-        new SequentialCommandGroup(
-            elevator1.Motionmagictoggle(0),
-            new ParallelCommandGroup(new AutonomusElevatorcmd(elevator1, 0, false))));
+ 
 
     NamedCommands.registerCommand(
         "AlgaeCenterl2",
@@ -494,7 +495,7 @@ public class Robot extends LoggedRobot {
     Command hyper1 =
 
         // setpoint
-        new Hyp(algea, -0.5, 5, elevator1, -11.679, 0);
+        new Hyper(algea, -0.5, 5, elevator1, -11.679, 0);
     Command Positionl3 =
         // new SequentialCommandGroup(new l2algae(algea, 0.8, 5, elevator1, -18.31416015625));
         new SequentialCommandGroup(new l3algae(algea, -0.5, 5, elevator1, -14.03251953125, 6.5));
@@ -1856,7 +1857,6 @@ public class Robot extends LoggedRobot {
     // Elevator pos up
     joystick3.leftStick().whileTrue(elevator1.runOnce(() -> elevator1.elevatorup()));
     // Toggle Vision
-    joystick3.b().whileTrue(new Lynkalighnmentleft(drivetrain, true, true, 1.5, 0));
 
     // X wheels
     joystick3.x().whileTrue(drivetrain.brake());
@@ -1878,13 +1878,13 @@ public class Robot extends LoggedRobot {
 
     joystick3
         .y()
-        .whileTrue(new ParallelCommandGroup(climb.cmdspeed(1)))
-        .whileFalse(climb.cmdspeed(0));
+        .whileTrue(new ParallelCommandGroup(climb.cmd(1)))
+        .whileFalse(climb.cmd(0));
 
     joystick3
         .a()
-        .whileTrue(new ParallelCommandGroup(climb.cmdspeed(-1)))
-        .whileFalse(climb.cmdspeed(0));
+        .whileTrue(new ParallelCommandGroup(climb.cmd(-1)))
+        .whileFalse(climb.cmd(0));
   }
 
   public Command getAutonomousCommand() {
