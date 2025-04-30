@@ -91,10 +91,10 @@ public class elevatorsub extends SubsystemBase {
 
   public elevatorsub() {
     slot0.kG = 0.5; // A gear ratio of 4:1 results in 0.25 output
-    slot0.kS = 0.7;
-    slot0.kV = 1.2; // A velocity target of 1 rps results in 0.12 V output
+    slot0.kS = 3;
+    slot0.kV = 1.8; // A velocity target of 1 rps results in 0.12 V output
     slot0.kA = 0.04; // An acceleration of 1 rps/s requires 0.01 V output
-    slot0.kP = 5; // A position error of 2.5 rotations results in 12 V output
+    slot0.kP = 8; // A position error of 2.5 rotations results in 12 V output
     slot0.kI = 0; // no output for integrated error
     slot0.kD = 0.1; // A velocity error of 1 rps results in 0.1 V output
 
@@ -112,7 +112,7 @@ public class elevatorsub extends SubsystemBase {
     motionMagicConfigs2.MotionMagicJerk = 900;
 
     motionMagicConfigs.MotionMagicCruiseVelocity = 500; // Target cruise velocity of 80 rps
-    motionMagicConfigs.MotionMagicAcceleration =x
+    motionMagicConfigs.MotionMagicAcceleration =
         400; // Target acceleration of 160 rps/s (0.5 seconds)
     motionMagicConfigs.MotionMagicJerk = 900; // Target jerk of 1600 rps/s/s (0.1 seconds)\
 
@@ -171,7 +171,7 @@ public class elevatorsub extends SubsystemBase {
     le.setControl(
         m_request
             .withPosition(activeSetpoints.get(position))
-            .withFeedForward(0.6  )
+            .withFeedForward(0.6)
             .withEnableFOC(true));
 
     // If you want the follower to track, you can do the same for 're' if needed.
